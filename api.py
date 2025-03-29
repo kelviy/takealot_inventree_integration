@@ -25,7 +25,7 @@ class TakeALot_API:
         while True:
             params = {"page_size": page_size, "page_number": page_num}
             try:
-                response = requests.get(f"{self.base_url.rstrip("/")}{end_point}", headers=headers, params=params)
+                response = requests.get(f"{self.base_url.rstrip('/')}{end_point}", headers=headers, params=params)
                 response.raise_for_status()
                 data = response.json()
             except Exception as e:
