@@ -141,15 +141,13 @@
                                       <td>${item.sales_count}</td>
                                   </tr>`;
                         if (hasWarehouses) {
-                            tableHtml += `<tr>
+                            tableHtml += `<tr class="collapse" id="details-${sanitizedSku}">
                                             <td colspan="6">
-                                                <div class="collapse" id="details-${sanitizedSku}">
-                                                    <ul class="list-group list-group-flush">`;
+                                                <ul class="list-group list-group-flush">`;
                             item.warehouses.forEach(w => {
                                 tableHtml += `<li class="list-group-item">${w.warehouse_name} (SDC: ${w.sdc})</li>`;
                             });
                             tableHtml += `       </ul>
-                                                </div>
                                             </td>
                                           </tr>`;
                         }
@@ -161,6 +159,25 @@
                         </div>
                     </div>`;
                     $("#tableContainer").html(tableHtml);
+
+                    $(".toggle-details").on("click", function() {
+                        const targetSelector = $(this).data("bs-target");
+                        const icon = $(this).find("i");
+                        const target = $(targetSelector);
+                        const isShown = target.hasClass("show");
+
+                        // Manually toggle
+                        if (isShown) {
+                            target.removeClass("show");
+                            icon.removeClass("bi-dash").addClass("bi-plus");
+                        } else {
+                            $(".collapse.show").removeClass("show"); // Close any open panels
+                            $(".toggle-details i").removeClass("bi-dash").addClass("bi-plus"); // Reset all icons
+
+                            target.addClass("show");
+                            icon.removeClass("bi-plus").addClass("bi-dash");
+                        }
+                    });
 
                     // Add click handlers to table headers for sorting (skip the first two columns)
                     $("#dataTable th").each(function(index) {
@@ -176,16 +193,6 @@
 
                     // Make columns resizable
                     makeResizable(document.getElementById('dataTable'));
-
-                    // Listen for collapse events to update the toggle icon
-                    $('#dataTable').on('shown.bs.collapse', '.collapse', function () {
-                        var id = $(this).attr('id');
-                        $('[data-bs-target="#' + id + '"]').find("i").removeClass("bi-plus").addClass("bi-dash");
-                    });
-                    $('#dataTable').on('hidden.bs.collapse', '.collapse', function () {
-                        var id = $(this).attr('id');
-                        $('[data-bs-target="#' + id + '"]').find("i").removeClass("bi-dash").addClass("bi-plus");
-                    });
                 },
                 error: function(error) {
                     $("#loading").hide();
