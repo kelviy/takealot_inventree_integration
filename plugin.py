@@ -2,7 +2,7 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from api import TakeALot_API, Custom_Inventree_API
+from .api import TakeALot_API, Custom_Inventree_API
 
 class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreePlugin):
     NAME = "TakeALot Integrator"
