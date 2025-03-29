@@ -64,7 +64,6 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
         for sku, sdc_total, stock_cover, sales_count in filtered:
             part = self.inventree_api.match_part(sku)
             product_image = part.image.url if getattr(part, "image", None) else ""
-
             product_name = part.name
             # Map warehouse ids to names using the warehouse_mappings list.
             warehouses = []

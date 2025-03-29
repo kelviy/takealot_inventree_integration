@@ -130,5 +130,5 @@ class Custom_Inventree_API:
         return parts
     
     def match_part(self, sku) -> Part:
-        return Part.objects.filter(IPN__iexact=sku)
+        return Part.objects.filter(IPN__iexact=sku).first()
 
