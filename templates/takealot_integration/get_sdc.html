@@ -45,6 +45,42 @@
             });
     }
 
+    // Function to make table columns resizable
+    function makeResizable(table) {
+        const thElems = table.querySelectorAll('th');
+        thElems.forEach(function(th) {
+            // Create a resizer element
+            const resizer = document.createElement('div');
+            resizer.style.width = '5px';
+            resizer.style.height = '100%';
+            resizer.style.position = 'absolute';
+            resizer.style.top = '0';
+            resizer.style.right = '0';
+            resizer.style.cursor = 'col-resize';
+            resizer.style.userSelect = 'none';
+            th.style.position = 'relative';
+            th.appendChild(resizer);
+            
+            let startX, startWidth;
+            resizer.addEventListener('mousedown', function(e) {
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+            });
+            
+            function mouseMoveHandler(e) {
+                let newWidth = startWidth + (e.pageX - startX);
+                th.style.width = newWidth + 'px';
+            }
+            
+            function mouseUpHandler(e) {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+            }
+        });
+    }
+
     $(document).ready(function() {
         $("#fetchDataBtn").on("click", function() {
             // Disable button and show loading indicator
@@ -65,6 +101,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="text-center"></th>
+                                            <th class="text-center">Image</th>
                                             <th class="text-center">SKU</th>
                                             <th class="text-center">Product Name</th>
                                             <th class="text-center">SDC Total</th>
@@ -75,24 +112,32 @@
                     `;
                     data.forEach(item => {
                         const hasWarehouses = item.warehouses && item.warehouses.length > 0;
-                        tableHtml += `<tr class="main-row" data-sku="${item.sku}">
-                                        <td class="text-center">`;
+                        tableHtml += `<tr class="main-row" data-sku="${item.sku}">`
+                                    + `<td class="text-center">`;
                         if (hasWarehouses) {
                             tableHtml += `<button class="btn btn-sm btn-outline-secondary toggle-details" data-bs-toggle="collapse" data-bs-target="#details-${item.sku}" aria-expanded="false" aria-controls="details-${item.sku}">
                                             <i class="bi bi-plus"></i>
                                           </button>`;
                         }
-                        tableHtml += `</td>
-                                        <td>${item.sku}</td>
-                                        <td>${item.product_name}</td>
-                                        <td>${item.sdc_total}</td>
-                                        <td>${item.sales_count}</td>
-                                      </tr>`;
+                        tableHtml += `</td>`;
+                        // New cell for product image
+                        tableHtml += `<td class="text-center">`;
+                        if (item.product_image) {
+                            tableHtml += `<img src="${item.product_image}" alt="Product Image" style="max-width:40px; max-height:40px;">`;
+                        } else {
+                            tableHtml += `-`;
+                        }
+                        tableHtml += `</td>`;
+                        
+                        tableHtml += `<td>${item.sku}</td>
+                                      <td>${item.product_name}</td>
+                                      <td>${item.sdc_total}</td>
+                                      <td>${item.sales_count}</td>
+                                  </tr>`;
                         if (hasWarehouses) {
                             tableHtml += `<tr class="collapse" id="details-${item.sku}">
-                                            <td colspan="5">
-                                                <ul class="list-group list-group-flush">
-                            `;
+                                            <td colspan="6">
+                                                <ul class="list-group list-group-flush">`;
                             item.warehouses.forEach(w => {
                                 tableHtml += `<li class="list-group-item">${w.warehouse_name} (SDC: ${w.sdc})</li>`;
                             });
@@ -109,16 +154,20 @@
                     </div>`;
                     $("#tableContainer").html(tableHtml);
 
-                    // Add click handlers to table headers for sorting (skip the first column)
+                    // Add click handlers to table headers for sorting (skip the first two columns)
                     $("#dataTable th").each(function(index) {
-                        if (index === 0) return; // skip the expand column header
+                        if (index === 0 || index === 1) return; // skip the expand and image column headers
                         $(this).css("cursor", "pointer").data("asc", true);
                         $(this).on("click", function() {
                             const asc = $(this).data("asc");
-                            sortTable(document.getElementById("dataTable"), index - 1, asc);
+                            // Adjust the column index by subtracting 2
+                            sortTable(document.getElementById("dataTable"), index - 2, asc);
                             $(this).data("asc", !asc);
                         });
                     });
+
+                    // Make columns resizable
+                    makeResizable(document.getElementById('dataTable'));
                 },
                 error: function(error) {
                     $("#loading").hide();
