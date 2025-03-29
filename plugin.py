@@ -55,7 +55,7 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
         ]
 
     # --- End Provided Functions ---
-    def fetch_takealot_data(self, request):
+    def interface(self, request):
         product_list = self.takealot_api.get_stock_cover()
         sales_data = self.takealot_api.get_sales_data(days=100)
         filtered = TakeALot_API.prepare_sdc_data(product_list, sales_data)
