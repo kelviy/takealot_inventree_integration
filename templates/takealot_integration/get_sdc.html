@@ -1,55 +1,115 @@
-{% extends "base.html" %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <!-- Load jQuery from a CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Simple styles for the table and loading state */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            cursor: pointer;
+            background-color: #f2f2f2;
+        }
+        #loading {
+            display: none;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <button id="fetchDataBtn">Fetch TakeALot Data</button>
+    <div id="loading">Loading, please wait...</div>
+    <div id="tableContainer"></div>
 
-{% block title %}{{ title }}{% endblock %}
+    <script>
+        // Simple sort function for table rows (using text comparison)
+        function sortTable(table, column, asc = true) {
+            const tbody = table.tBodies[0];
+            Array.from(tbody.querySelectorAll("tr"))
+                .sort((a, b) => {
+                    const aText = a.querySelectorAll("td")[column].innerText.trim();
+                    const bText = b.querySelectorAll("td")[column].innerText.trim();
+                    // Try to compare as numbers, fallback to string
+                    const aVal = parseFloat(aText) || aText;
+                    const bVal = parseFloat(bText) || bText;
+                    return asc ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
+                })
+                .forEach(tr => tbody.appendChild(tr));
+        }
 
-{% block content %}
-<div class="container-fluid">
-    <!-- Heading -->
-    <h3 class="mb-3">{{ title }}</h3>
+        $(document).ready(function() {
+            $("#fetchDataBtn").on("click", function() {
+                // Disable button and show loading message
+                $(this).prop("disabled", true);
+                $("#loading").show();
 
-    <!-- Optional error alert -->
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+                $.ajax({
+                    url: "{% url 'plugin:takealotintegrator:fetch-takealot-data' %}",
+                    method: "GET",
+                    success: function(response) {
+                        $("#loading").hide();
+                        const data = response.data;
+                        let tableHtml = `<table id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th data-col="sku">SKU</th>
+                                    <th data-col="product_name">Product Name</th>
+                                    <th data-col="sdc_total">SDC Total</th>
+                                    <th data-col="sales_count">Sales Count</th>
+                                    <th data-col="warehouses">Warehouses</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                        data.forEach(item => {
+                            let warehouses = '';
+                            if (item.warehouses.length > 0) {
+                                warehouses = item.warehouses.map(
+                                    w => `${w.warehouse_name} (${w.sdc})`
+                                ).join(', ');
+                            }
+                            tableHtml += `<tr>
+                                <td>${item.sku}</td>
+                                <td>${item.product_name}</td>
+                                <td>${item.sdc_total}</td>
+                                <td>${item.sales_count}</td>
+                                <td>${warehouses}</td>
+                            </tr>`;
+                        });
+                        tableHtml += `</tbody></table>`;
+                        $("#tableContainer").html(tableHtml);
 
-    <!-- Button to trigger React component rendering -->
-    <div class="d-flex align-items-center mt-3 mb-3">
-        <button id="get-data-btn" class="btn btn-primary">Get Takealot Data</button>
-    </div>
-
-    <!-- Container where the table will be inserted by vanilla JS -->
-    <div id="takealot-data-container"></div>
-
-    <!-- Include the React component bundle (assumes static files are correctly configured) -->
-    <script defer type="text/javascript" src="{% static 'takealot_integration/dist/bundle.js' %}"></script>
-
-    <!-- Mount React component when the button is clicked -->
-    <script defer type="text/javascript">
-        // Ensure the component is loaded from the React bundle
-        window.addEventListener('load', function () {
-            const checkAndRender = () => {
-                if (window.TakealotPlugin && window.React && window.ReactDOM) {
-                    document.getElementById('get-data-btn').addEventListener('click', function() {
-                        const button = document.getElementById('get-data-btn');
-                        button.disabled = true;
-                        button.innerText = 'Loading...';
-                        try {
-                            ReactDOM.render(
-                                React.createElement(window.TakealotPlugin.default),
-                                document.getElementById('takealot-data-container')
-                            );
-                        } finally {
-                            button.disabled = false;
-                            button.innerText = 'Get Takealot Data';
-                        }
-                    });
-                } else {
-                    setTimeout(checkAndRender, 100); // Wait and try again
-                }
-            };
-            checkAndRender();
+                        // Add click handler to each header for sorting
+                        $("#dataTable th").each(function(index) {
+                            $(this).css("cursor", "pointer").data("asc", true);
+                            $(this).on("click", function() {
+                                // Toggle sort order for the clicked column
+                                const asc = $(this).data("asc");
+                                sortTable(document.getElementById("dataTable"), index, asc);
+                                $(this).data("asc", !asc);
+                            });
+                        });
+                    },
+                    error: function(error) {
+                        $("#loading").hide();
+                        alert("Error fetching data.");
+                        $("#fetchDataBtn").prop("disabled", false);
+                    }
+                });
+            });
         });
     </script>
-</div>
-{% endblock %}
+</body>
+</html>
