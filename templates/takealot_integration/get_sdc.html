@@ -31,10 +31,18 @@
             const checkAndRender = () => {
                 if (window.TakealotPlugin && window.React && window.ReactDOM) {
                     document.getElementById('get-data-btn').addEventListener('click', function() {
-                        ReactDOM.render(
-                            React.createElement(window.TakealotPlugin),
-                            document.getElementById('takealot-data-container')
-                        );
+                        const button = document.getElementById('get-data-btn');
+                        button.disabled = true;
+                        button.innerText = 'Loading...';
+                        try {
+                            ReactDOM.render(
+                                React.createElement(window.TakealotPlugin),
+                                document.getElementById('takealot-data-container')
+                            );
+                        } finally {
+                            button.disabled = false;
+                            button.innerText = 'Get Takealot Data';
+                        }
                     });
                 } else {
                     setTimeout(checkAndRender, 100); // Wait and try again
