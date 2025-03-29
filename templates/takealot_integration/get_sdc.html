@@ -160,6 +160,21 @@
                     </div>`;
                     $("#tableContainer").html(tableHtml);
 
+                    $(".toggle-details").on("click", function() {
+                        const targetSelector = $(this).data("bs-target");
+                        const icon = $(this).find("i");
+                        const target = $(targetSelector);
+                        target.collapse('toggle');
+
+                        target.on('shown.bs.collapse', function () {
+                            icon.removeClass("bi-plus").addClass("bi-dash");
+                        });
+
+                        target.on('hidden.bs.collapse', function () {
+                            icon.removeClass("bi-dash").addClass("bi-plus");
+                        });
+                    });
+
                     // Add click handlers to table headers for sorting (skip the first two columns)
                     $("#dataTable th").each(function(index) {
                         if (index === 0 || index === 1) return; // skip the expand and image column headers
