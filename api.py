@@ -112,10 +112,10 @@ class TakeALot_API:
             print(f"Error {e}")
             return []
         
-        mappings = []
+        mappings = {}
         for mapping in data.get("stock_at_takealot", []):
             # Expecting each mapping to be a dict with "warehouse" details.
-            mappings.append(mapping["warehouse"])
+            mappings.update(mapping["warehouse"])
         self.warehouse_mappings = mappings
 
 
