@@ -40,6 +40,7 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
             "default": "",
             "validator":"string",
             "required": True,
+            "hidden": True,
         },
     }
 
@@ -47,7 +48,7 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
         super().__init__()
 
         self.context = {}
-        self.takealot_api = TakeALot_API(self.get_setting("TAKEALOT_API_KEY"), self.get_setting("TAKEALOT_BASE_URL"))
+        self.takealot_api = TakeALot_API(self.get_setting("TAKEALOT_API_KEY"), self.get_setting("TAKEALOT_API_BASE_URL"))
         self.inventree_api = Custom_Inventree_API()
 
     def setup_urls(self):

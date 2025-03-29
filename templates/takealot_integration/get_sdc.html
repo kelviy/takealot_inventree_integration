@@ -17,77 +17,18 @@
     <div id="tableContainer"></div>
 </div>
 
+<!-- Include jQuery and DataTables libraries -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap 5 JS bundle (includes Popper) -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<!-- Bootstrap 5 JS bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
 <script>
-    function sanitizeId(value) {
-        return value.replace(/[^a-zA-Z0-9_-]/g, "_");
-    }
-
-    // Simple sort function for table rows (using text comparison)
-    function sortTable(table, column, asc = true) {
-        const tbody = table.tBodies[0];
-        Array.from(tbody.querySelectorAll("tr.main-row"))
-            .sort((a, b) => {
-                // Since the first column is used for the expand button, adjust index by +1
-                const aText = a.querySelectorAll("td")[column + 1].innerText.trim();
-                const bText = b.querySelectorAll("td")[column + 1].innerText.trim();
-                const aVal = parseFloat(aText) || aText;
-                const bVal = parseFloat(bText) || bText;
-                return asc ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
-            })
-            .forEach(tr => {
-                tbody.appendChild(tr);
-                // Append the details row immediately following the main row if it exists
-                let detailsRow = document.getElementById("details-" + sanitizeId($(tr).data("sku")));
-                if (detailsRow) {
-                    tbody.appendChild(detailsRow);
-                }
-            });
-    }
-
-    // Function to make table columns resizable
-    function makeResizable(table) {
-        const thElems = table.querySelectorAll('th');
-        thElems.forEach(function(th) {
-            // Create a resizer element
-            const resizer = document.createElement('div');
-            resizer.style.width = '5px';
-            resizer.style.height = '100%';
-            resizer.style.position = 'absolute';
-            resizer.style.top = '0';
-            resizer.style.right = '0';
-            resizer.style.cursor = 'col-resize';
-            resizer.style.userSelect = 'none';
-            th.style.position = 'relative';
-            th.appendChild(resizer);
-            
-            let startX, startWidth;
-            resizer.addEventListener('mousedown', function(e) {
-                startX = e.pageX;
-                startWidth = th.offsetWidth;
-                document.addEventListener('mousemove', mouseMoveHandler);
-                document.addEventListener('mouseup', mouseUpHandler);
-            });
-            
-            function mouseMoveHandler(e) {
-                let newWidth = startWidth + (e.pageX - startX);
-                th.style.width = newWidth + 'px';
-            }
-            
-            function mouseUpHandler(e) {
-                document.removeEventListener('mousemove', mouseMoveHandler);
-                document.removeEventListener('mouseup', mouseUpHandler);
-            }
-        });
-    }
-
     $(document).ready(function() {
         $("#fetchDataBtn").on("click", function() {
-            // Disable button and show loading indicator
             $(this).prop("disabled", true);
             $("#loading").show();
 
@@ -97,36 +38,27 @@
                 success: function(response) {
                     $("#loading").hide();
                     const data = response.data;
-                    const sanitizeId = value => value.replace(/[^a-zA-Z0-9_-]/g, "_");
                     let tableHtml = `
                     <div class="card">
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="dataTable" class="table table-striped table-bordered table-sm">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="text-center"></th>
-                                            <th class="text-center">Image</th>
-                                            <th class="text-center">SKU</th>
-                                            <th class="text-center">Product Name</th>
-                                            <th class="text-center">SDC Total</th>
-                                            <th class="text-center">Sales Count</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                            <table id="dataTable" class="display table table-striped table-bordered table-sm" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Image</th>
+                                        <th>SKU</th>
+                                        <th>Product Name</th>
+                                        <th>SDC Total</th>
+                                        <th>Sales Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                     `;
+                    // Build table rows – store warehouses as JSON in a data attribute for expandable rows.
                     data.forEach(item => {
-                        const sanitizedSku = sanitizeId(item.sku);
                         const hasWarehouses = item.warehouses && item.warehouses.length > 0;
-                        tableHtml += `<tr class="main-row" data-sku="${sanitizedSku}">`
-                                    + `<td class="text-center">`;
-                        if (hasWarehouses) {
-                            tableHtml += `<button class="btn btn-sm btn-outline-secondary toggle-details" data-bs-target="#details-${sanitizedSku}" aria-expanded="false" aria-controls="details-${sanitizedSku}">
-                                            <i class="bi bi-plus"></i>
-                                          </button>`;
-                        }
-                        tableHtml += `</td>`;
-                        // New cell for product image
+                        tableHtml += `<tr data-child='${hasWarehouses ? JSON.stringify(item.warehouses) : ""}'>`;
+                        tableHtml += `<td class="details-control text-center">${hasWarehouses ? '<i class="bi bi-plus-circle"></i>' : ''}</td>`;
                         tableHtml += `<td class="text-center">`;
                         if (item.product_image) {
                             tableHtml += `<img src="${item.product_image}" alt="Product Image" style="max-width:40px; max-height:40px;">`;
@@ -134,65 +66,47 @@
                             tableHtml += `-`;
                         }
                         tableHtml += `</td>`;
-                        
-                        tableHtml += `<td>${sanitizedSku}</td>
-                                      <td>${item.product_name}</td>
-                                      <td>${item.sdc_total}</td>
-                                      <td>${item.sales_count}</td>
-                                  </tr>`;
-                        if (hasWarehouses) {
-                            tableHtml += `<tr class="collapse" id="details-${sanitizedSku}">
-                                            <td colspan="6">
-                                                <ul class="list-group list-group-flush">`;
-                            item.warehouses.forEach(w => {
-                                tableHtml += `<li class="list-group-item">${w.warehouse_name} (SDC: ${w.sdc})</li>`;
-                            });
-                            tableHtml += `       </ul>
-                                            </td>
-                                          </tr>`;
-                        }
+                        tableHtml += `<td>${item.sku}</td>`;
+                        tableHtml += `<td>${item.product_name}</td>`;
+                        tableHtml += `<td>${item.sdc_total}</td>`;
+                        tableHtml += `<td>${item.sales_count}</td>`;
+                        tableHtml += `</tr>`;
                     });
                     tableHtml += `
-                                    </tbody>
-                                </table>
-                            </div>
+                                </tbody>
+                            </table>
                         </div>
                     </div>`;
                     $("#tableContainer").html(tableHtml);
 
-                    $(".toggle-details").on("click", function() {
-                        const targetSelector = $(this).data("bs-target");
-                        const icon = $(this).find("i");
-                        const target = $(targetSelector);
-                        const isShown = target.hasClass("show");
+                    // Initialize DataTables
+                    var table = $('#dataTable').DataTable({
+                        responsive: true
+                    });
 
-                        // Manually toggle
-                        if (isShown) {
-                            target.removeClass("show");
-                            icon.removeClass("bi-dash").addClass("bi-plus");
+                    // Toggle expandable child rows (using DataTables child row API)
+                    $('#dataTable tbody').on('click', 'td.details-control', function () {
+                        var tr = $(this).closest('tr');
+                        var row = table.row(tr);
+                        if ( row.child.isShown() ) {
+                            row.child.hide();
+                            tr.find('td.details-control i').removeClass('bi-dash-circle').addClass('bi-plus-circle');
                         } else {
-                            $(".collapse.show").removeClass("show"); // Close any open panels
-                            $(".toggle-details i").removeClass("bi-dash").addClass("bi-plus"); // Reset all icons
-
-                            target.addClass("show");
-                            icon.removeClass("bi-plus").addClass("bi-dash");
+                            var childData = tr.attr("data-child");
+                            var childHtml = "";
+                            if (childData) {
+                                var warehouses = JSON.parse(childData);
+                                childHtml += '<table class="table table-sm mb-0">';
+                                childHtml += '<thead><tr><th>Warehouse Name</th><th>SDC</th></tr></thead><tbody>';
+                                warehouses.forEach(function(w) {
+                                    childHtml += `<tr><td>${w.warehouse_name}</td><td>${w.sdc}</td></tr>`;
+                                });
+                                childHtml += '</tbody></table>';
+                            }
+                            row.child(childHtml).show();
+                            tr.find('td.details-control i').removeClass('bi-plus-circle').addClass('bi-dash-circle');
                         }
                     });
-
-                    // Add click handlers to table headers for sorting (skip the first two columns)
-                    $("#dataTable th").each(function(index) {
-                        if (index === 0 || index === 1) return; // skip the expand and image column headers
-                        $(this).css("cursor", "pointer").data("asc", true);
-                        $(this).on("click", function() {
-                            const asc = $(this).data("asc");
-                            // Adjust the column index by subtracting 2
-                            sortTable(document.getElementById("dataTable"), index - 2, asc);
-                            $(this).data("asc", !asc);
-                        });
-                    });
-
-                    // Make columns resizable
-                    makeResizable(document.getElementById('dataTable'));
                 },
                 error: function(error) {
                     $("#loading").hide();
