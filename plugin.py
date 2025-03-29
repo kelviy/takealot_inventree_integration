@@ -98,13 +98,22 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
                     "warehouses": warehouses
                 })
             else:
+                warehouses = []
+                for wh_id in stock_cover:
+                    # Look up warehouse name from the mappings list; if not found, default to the id.
+                    warehouse_name = self.takealot_api.warehouse_mappings[wh_id]
+                    warehouses.append({
+                        "warehouse_id": wh_id,
+                        "warehouse_name": warehouse_name,
+                        "sdc": stock_cover[wh_id]
+                    })
                 result.append({
                     "sku": sku,
                     "product_name": "not found",
                     "product_image": 'not found',
                     "sdc_total": sdc_total,
                     "sales_count": sales_count,
-                    "warehouses": []
+                    "warehouses": warehouses
                 })
 
         return JsonResponse({"data": result})
