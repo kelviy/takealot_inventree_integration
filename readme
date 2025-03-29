@@ -1,0 +1,7 @@
+## Takealot API Endpoint notes
+
+
+Single Offer endpoint doesn't provide SDC or Sales Units. unconfirmed on stock on the way. Other outputs are fine
+Get_offers. Max of 1000 page size
+
+
