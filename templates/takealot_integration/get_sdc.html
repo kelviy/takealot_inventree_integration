@@ -1,115 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ title }}</title>
-    <!-- Load jQuery from a CDN -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        /* Simple styles for the table and loading state */
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 8px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-        th {
-            cursor: pointer;
-            background-color: #f2f2f2;
-        }
-        #loading {
-            display: none;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>{{ title }}</h1>
-    <button id="fetchDataBtn">Fetch TakeALot Data</button>
-    <div id="loading">Loading, please wait...</div>
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mb-3">{{ title }}</h3>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <div class="mb-3">
+        <button id="fetchDataBtn" type="button" class="btn btn-primary">Fetch TakeALot Data</button>
+        <span id="loading" class="ms-3" style="display: none;">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Loading, please wait...
+        </span>
+    </div>
     <div id="tableContainer"></div>
+</div>
 
-    <script>
-        // Simple sort function for table rows (using text comparison)
-        function sortTable(table, column, asc = true) {
-            const tbody = table.tBodies[0];
-            Array.from(tbody.querySelectorAll("tr"))
-                .sort((a, b) => {
-                    const aText = a.querySelectorAll("td")[column].innerText.trim();
-                    const bText = b.querySelectorAll("td")[column].innerText.trim();
-                    // Try to compare as numbers, fallback to string
-                    const aVal = parseFloat(aText) || aText;
-                    const bVal = parseFloat(bText) || bText;
-                    return asc ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
-                })
-                .forEach(tr => tbody.appendChild(tr));
-        }
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 5 JS bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script>
+    // Simple sort function for table rows (using text comparison)
+    function sortTable(table, column, asc = true) {
+        const tbody = table.tBodies[0];
+        Array.from(tbody.querySelectorAll("tr.main-row"))
+            .sort((a, b) => {
+                // Since the first column is used for the expand button, adjust index by +1
+                const aText = a.querySelectorAll("td")[column + 1].innerText.trim();
+                const bText = b.querySelectorAll("td")[column + 1].innerText.trim();
+                const aVal = parseFloat(aText) || aText;
+                const bVal = parseFloat(bText) || bText;
+                return asc ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
+            })
+            .forEach(tr => {
+                tbody.appendChild(tr);
+                // Append the details row immediately following the main row if it exists
+                let detailsRow = document.getElementById("details-" + $(tr).data("sku"));
+                if (detailsRow) {
+                    tbody.appendChild(detailsRow);
+                }
+            });
+    }
 
-        $(document).ready(function() {
-            $("#fetchDataBtn").on("click", function() {
-                // Disable button and show loading message
-                $(this).prop("disabled", true);
-                $("#loading").show();
+    $(document).ready(function() {
+        $("#fetchDataBtn").on("click", function() {
+            // Disable button and show loading indicator
+            $(this).prop("disabled", true);
+            $("#loading").show();
 
-                $.ajax({
-                    url: "{% url 'plugin:takealotintegrator:fetch-takealot-data' %}",
-                    method: "GET",
-                    success: function(response) {
-                        $("#loading").hide();
-                        const data = response.data;
-                        let tableHtml = `<table id="dataTable">
-                            <thead>
-                                <tr>
-                                    <th data-col="sku">SKU</th>
-                                    <th data-col="product_name">Product Name</th>
-                                    <th data-col="sdc_total">SDC Total</th>
-                                    <th data-col="sales_count">Sales Count</th>
-                                    <th data-col="warehouses">Warehouses</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                        data.forEach(item => {
-                            let warehouses = '';
-                            if (item.warehouses.length > 0) {
-                                warehouses = item.warehouses.map(
-                                    w => `${w.warehouse_name} (${w.sdc})`
-                                ).join(', ');
-                            }
-                            tableHtml += `<tr>
-                                <td>${item.sku}</td>
-                                <td>${item.product_name}</td>
-                                <td>${item.sdc_total}</td>
-                                <td>${item.sales_count}</td>
-                                <td>${warehouses}</td>
-                            </tr>`;
-                        });
-                        tableHtml += `</tbody></table>`;
-                        $("#tableContainer").html(tableHtml);
-
-                        // Add click handler to each header for sorting
-                        $("#dataTable th").each(function(index) {
-                            $(this).css("cursor", "pointer").data("asc", true);
-                            $(this).on("click", function() {
-                                // Toggle sort order for the clicked column
-                                const asc = $(this).data("asc");
-                                sortTable(document.getElementById("dataTable"), index, asc);
-                                $(this).data("asc", !asc);
+            $.ajax({
+                url: "{% url 'plugin:takealotintegrator:fetch-takealot-data' %}",
+                method: "GET",
+                success: function(response) {
+                    $("#loading").hide();
+                    const data = response.data;
+                    let tableHtml = `
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="dataTable" class="table table-striped table-bordered table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center"></th>
+                                            <th class="text-center">SKU</th>
+                                            <th class="text-center">Product Name</th>
+                                            <th class="text-center">SDC Total</th>
+                                            <th class="text-center">Sales Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    data.forEach(item => {
+                        const hasWarehouses = item.warehouses && item.warehouses.length > 0;
+                        tableHtml += `<tr class="main-row" data-sku="${item.sku}">
+                                        <td class="text-center">`;
+                        if (hasWarehouses) {
+                            tableHtml += `<button class="btn btn-sm btn-outline-secondary toggle-details" data-bs-toggle="collapse" data-bs-target="#details-${item.sku}" aria-expanded="false" aria-controls="details-${item.sku}">
+                                            <i class="bi bi-plus"></i>
+                                          </button>`;
+                        }
+                        tableHtml += `</td>
+                                        <td>${item.sku}</td>
+                                        <td>${item.product_name}</td>
+                                        <td>${item.sdc_total}</td>
+                                        <td>${item.sales_count}</td>
+                                      </tr>`;
+                        if (hasWarehouses) {
+                            tableHtml += `<tr class="collapse" id="details-${item.sku}">
+                                            <td colspan="5">
+                                                <ul class="list-group list-group-flush">
+                            `;
+                            item.warehouses.forEach(w => {
+                                tableHtml += `<li class="list-group-item">${w.warehouse_name} (SDC: ${w.sdc})</li>`;
                             });
+                            tableHtml += `       </ul>
+                                            </td>
+                                          </tr>`;
+                        }
+                    });
+                    tableHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+                    $("#tableContainer").html(tableHtml);
+
+                    // Add click handlers to table headers for sorting (skip the first column)
+                    $("#dataTable th").each(function(index) {
+                        if (index === 0) return; // skip the expand column header
+                        $(this).css("cursor", "pointer").data("asc", true);
+                        $(this).on("click", function() {
+                            const asc = $(this).data("asc");
+                            sortTable(document.getElementById("dataTable"), index - 1, asc);
+                            $(this).data("asc", !asc);
                         });
-                    },
-                    error: function(error) {
-                        $("#loading").hide();
-                        alert("Error fetching data.");
-                        $("#fetchDataBtn").prop("disabled", false);
-                    }
-                });
+                    });
+                },
+                error: function(error) {
+                    $("#loading").hide();
+                    alert("Error fetching data.");
+                    $("#fetchDataBtn").prop("disabled", false);
+                }
             });
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}
