@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from plugin.mixins import NavigationMixin, SettingsMixin, UrlsMixin
-from datetime import datetime
+import datetime
 from plugin import InvenTreePlugin
 from .api import TakeALot_API, Custom_Inventree_API
 
