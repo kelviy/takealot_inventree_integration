@@ -37,7 +37,7 @@ class TakeALot_API:
                 break  # Exit loop if no more data
 
             for product in offers:
-                stock_cover = product.get("stock_cover", {})
+                stock_cover = product.get("stock_cover", [])
                 if stock_cover:
                     total_stock_cover = product.get("total_stock_cover")
                     product_list.append((product["sku"], total_stock_cover, stock_cover))

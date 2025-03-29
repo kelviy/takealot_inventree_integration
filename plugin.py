@@ -83,11 +83,11 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
                 warehouses = []
                 for wh_id in stock_cover:
                     # Look up warehouse name from the mappings list; if not found, default to the id.
-                    warehouse_name = self.takealot_api.warehouse_mappings[wh_id]
+                    warehouse_name = self.takealot_api.warehouse_mappings[wh_id['warehouse_id']]
                     warehouses.append({
-                        "warehouse_id": wh_id,
+                        "warehouse_id": wh_id['warehouse_id'],
                         "warehouse_name": warehouse_name,
-                        "sdc": stock_cover[wh_id]
+                        "sdc": wh_id['stock_cover_days']
                     })
                 result.append({
                     "sku": sku,
