@@ -22,93 +22,103 @@
 <script defer src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <script defer>
-    $(document).ready(function() {
-        $("#fetchDataBtn").on("click", function() {
-            $(this).prop("disabled", true);
-            $("#loading").show();
+    (function waitForjQuery(callback) {
+    if (window.jQuery) {
+        callback();
+    } else {
+        setTimeout(function() {
+            waitForjQuery(callback);
+        }, 50);
+    }
+    })(function() {
+        $(document).ready(function() {
+            $("#fetchDataBtn").on("click", function() {
+                $(this).prop("disabled", true);
+                $("#loading").show();
 
-            $.ajax({
-                url: "{% url 'plugin:takealotintegrator:fetch-takealot-data' %}",
-                method: "GET",
-                success: function(response) {
-                    $("#loading").hide();
-                    const data = response.data;
-                    let tableHtml = `
-                    <div class="card">
-                        <div class="card-body">
-                            <table id="dataTable" class="display table table-striped table-bordered table-sm" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th>Image</th>
-                                        <th>SKU</th>
-                                        <th>Product Name</th>
-                                        <th>SDC Total</th>
-                                        <th>Sales Count</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-                    // Build table rows – store warehouses as JSON in a data attribute for expandable rows.
-                    data.forEach(item => {
-                        const hasWarehouses = item.warehouses && item.warehouses.length > 0;
-                        tableHtml += `<tr data-child='${hasWarehouses ? JSON.stringify(item.warehouses) : ""}'>`;
-                        tableHtml += `<td class="details-control text-center">${hasWarehouses ? '<i class="bi bi-plus-circle"></i>' : ''}</td>`;
-                        tableHtml += `<td class="text-center">`;
-                        if (item.product_image) {
-                            tableHtml += `<img src="${item.product_image}" alt="Product Image" style="max-width:40px; max-height:40px;">`;
-                        } else {
-                            tableHtml += `-`;
-                        }
-                        tableHtml += `</td>`;
-                        tableHtml += `<td>${item.sku}</td>`;
-                        tableHtml += `<td>${item.product_name}</td>`;
-                        tableHtml += `<td>${item.sdc_total}</td>`;
-                        tableHtml += `<td>${item.sales_count}</td>`;
-                        tableHtml += `</tr>`;
-                    });
-                    tableHtml += `
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>`;
-                    $("#tableContainer").html(tableHtml);
-
-                    // Initialize DataTables
-                    var table = $('#dataTable').DataTable({
-                        responsive: true
-                    });
-
-                    // Toggle expandable child rows (using DataTables child row API)
-                    $('#dataTable tbody').on('click', 'td.details-control', function () {
-                        var tr = $(this).closest('tr');
-                        var row = table.row(tr);
-                        if ( row.child.isShown() ) {
-                            row.child.hide();
-                            tr.find('td.details-control i').removeClass('bi-dash-circle').addClass('bi-plus-circle');
-                        } else {
-                            var childData = tr.attr("data-child");
-                            var childHtml = "";
-                            if (childData) {
-                                var warehouses = JSON.parse(childData);
-                                childHtml += '<table class="table table-sm mb-0">';
-                                childHtml += '<thead><tr><th>Warehouse Name</th><th>SDC</th></tr></thead><tbody>';
-                                warehouses.forEach(function(w) {
-                                    childHtml += `<tr><td>${w.warehouse_name}</td><td>${w.sdc}</td></tr>`;
-                                });
-                                childHtml += '</tbody></table>';
+                $.ajax({
+                    url: "{% url 'plugin:takealotintegrator:fetch-takealot-data' %}",
+                    method: "GET",
+                    success: function(response) {
+                        $("#loading").hide();
+                        const data = response.data;
+                        let tableHtml = `
+                        <div class="card">
+                            <div class="card-body">
+                                <table id="dataTable" class="display table table-striped table-bordered table-sm" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Image</th>
+                                            <th>SKU</th>
+                                            <th>Product Name</th>
+                                            <th>SDC Total</th>
+                                            <th>Sales Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        // Build table rows – store warehouses as JSON in a data attribute for expandable rows.
+                        data.forEach(item => {
+                            const hasWarehouses = item.warehouses && item.warehouses.length > 0;
+                            tableHtml += `<tr data-child='${hasWarehouses ? JSON.stringify(item.warehouses) : ""}'>`;
+                            tableHtml += `<td class="details-control text-center">${hasWarehouses ? '<i class="bi bi-plus-circle"></i>' : ''}</td>`;
+                            tableHtml += `<td class="text-center">`;
+                            if (item.product_image) {
+                                tableHtml += `<img src="${item.product_image}" alt="Product Image" style="max-width:40px; max-height:40px;">`;
+                            } else {
+                                tableHtml += `-`;
                             }
-                            row.child(childHtml).show();
-                            tr.find('td.details-control i').removeClass('bi-plus-circle').addClass('bi-dash-circle');
-                        }
-                    });
-                },
-                error: function(error) {
-                    $("#loading").hide();
-                    alert("Error fetching data.");
-                    console.error("Error fetching data:", error);
-                    $("#fetchDataBtn").prop("disabled", false);
-                }
+                            tableHtml += `</td>`;
+                            tableHtml += `<td>${item.sku}</td>`;
+                            tableHtml += `<td>${item.product_name}</td>`;
+                            tableHtml += `<td>${item.sdc_total}</td>`;
+                            tableHtml += `<td>${item.sales_count}</td>`;
+                            tableHtml += `</tr>`;
+                        });
+                        tableHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                        $("#tableContainer").html(tableHtml);
+
+                        // Initialize DataTables
+                        var table = $('#dataTable').DataTable({
+                            responsive: true
+                        });
+
+                        // Toggle expandable child rows (using DataTables child row API)
+                        $('#dataTable tbody').on('click', 'td.details-control', function () {
+                            var tr = $(this).closest('tr');
+                            var row = table.row(tr);
+                            if ( row.child.isShown() ) {
+                                row.child.hide();
+                                tr.find('td.details-control i').removeClass('bi-dash-circle').addClass('bi-plus-circle');
+                            } else {
+                                var childData = tr.attr("data-child");
+                                var childHtml = "";
+                                if (childData) {
+                                    var warehouses = JSON.parse(childData);
+                                    childHtml += '<table class="table table-sm mb-0">';
+                                    childHtml += '<thead><tr><th>Warehouse Name</th><th>SDC</th></tr></thead><tbody>';
+                                    warehouses.forEach(function(w) {
+                                        childHtml += `<tr><td>${w.warehouse_name}</td><td>${w.sdc}</td></tr>`;
+                                    });
+                                    childHtml += '</tbody></table>';
+                                }
+                                row.child(childHtml).show();
+                                tr.find('td.details-control i').removeClass('bi-plus-circle').addClass('bi-dash-circle');
+                            }
+                        });
+                    },
+                    error: function(error) {
+                        $("#loading").hide();
+                        alert("Error fetching data.");
+                        console.error("Error fetching data:", error);
+                        $("#fetchDataBtn").prop("disabled", false);
+                    }
+                });
             });
         });
     });
