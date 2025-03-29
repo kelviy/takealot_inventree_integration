@@ -104,7 +104,7 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
                     "product_image": 'not found',
                     "sdc_total": sdc_total,
                     "sales_count": sales_count,
-                    "warehouses": warehouses
+                    "warehouses": []
                 })
 
         return JsonResponse({"data": result})
