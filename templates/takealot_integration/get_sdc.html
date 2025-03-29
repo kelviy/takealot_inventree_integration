@@ -172,6 +172,7 @@
                 error: function(error) {
                     $("#loading").hide();
                     alert("Error fetching data.");
+                    console.error("Error fetching data:", error);
                     $("#fetchDataBtn").prop("disabled", false);
                 }
             });
