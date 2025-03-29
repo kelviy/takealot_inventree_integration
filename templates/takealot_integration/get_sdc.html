@@ -164,15 +164,19 @@
                         const targetSelector = $(this).data("bs-target");
                         const icon = $(this).find("i");
                         const target = $(targetSelector);
-                        target.collapse('toggle');
+                        const isShown = target.hasClass("show");
 
-                        target.on('shown.bs.collapse', function () {
-                            icon.removeClass("bi-plus").addClass("bi-dash");
-                        });
-
-                        target.on('hidden.bs.collapse', function () {
+                        // Manually toggle
+                        if (isShown) {
+                            target.removeClass("show");
                             icon.removeClass("bi-dash").addClass("bi-plus");
-                        });
+                        } else {
+                            $(".collapse.show").removeClass("show"); // Close any open panels
+                            $(".toggle-details i").removeClass("bi-dash").addClass("bi-plus"); // Reset all icons
+
+                            target.addClass("show");
+                            icon.removeClass("bi-plus").addClass("bi-dash");
+                        }
                     });
 
                     // Add click handlers to table headers for sorting (skip the first two columns)
