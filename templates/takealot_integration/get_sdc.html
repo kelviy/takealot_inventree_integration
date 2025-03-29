@@ -18,20 +18,11 @@
         <button id="get-data-btn" class="btn btn-primary">Get Takealot Data</button>
     </div>
 
-    <!-- Container where the React Mantine table will be mounted -->
+    <!-- Container where the table will be inserted by vanilla JS -->
     <div id="takealot-data-container"></div>
 
-    <!-- Include the React component bundle (assumes static files are correctly configured) -->
+    <!-- Include the vanilla JS file (make sure static files are correctly configured) -->
     <script defer type="text/javascript" src="{% static 'takealot_integration/js/TakealotPlugin.js' %}"></script>
 
-    <!-- Mount React component when the button is clicked -->
-    <script>
-        document.getElementById('get-data-btn').addEventListener('click', function() {
-            ReactDOM.render(
-                React.createElement(TakealotPlugin),
-                document.getElementById('takealot-data-container')
-            );
-        });
-    </script>
 </div>
 {% endblock %}
