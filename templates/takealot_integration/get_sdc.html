@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Heading -->
+    <h3 class="mb-3">{{ title }}</h3>
+
+    <!-- Optional error alert -->
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <!-- Button to trigger React component rendering -->
+    <div class="d-flex align-items-center mt-3 mb-3">
+        <button id="get-data-btn" class="btn btn-primary">Get Takealot Data</button>
+    </div>
+
+    <!-- Container where the React Mantine table will be mounted -->
+    <div id="takealot-data-container"></div>
+
+    <!-- Include the React component bundle (assumes static files are correctly configured) -->
+    <script src="{% static 'inventree_takealot/js/TakealotPlugin.js' %}"></script>
+
+    <!-- Mount React component when the button is clicked -->
+    <script>
+        document.getElementById('get-data-btn').addEventListener('click', function() {
+            ReactDOM.render(
+                React.createElement(TakealotPlugin),
+                document.getElementById('takealot-data-container')
+            );
+        });
+    </script>
+</div>
+{% endblock %}
