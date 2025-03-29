@@ -2,7 +2,9 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.shortcuts import render
 from plugin.mixins import NavigationMixin, SettingsMixin, UrlsMixin
+from datetime import datetime
 from plugin import InvenTreePlugin
 from .api import TakeALot_API, Custom_Inventree_API
 
@@ -32,8 +34,8 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
             "required": True,
             "hidden": True,
         },
-        "TAKEALOT_API_ENDPOINT": {
-            "name": "TakeALot EndPoint URL",
+        "TAKEALOT_API_BASE_URL": {
+            "name": "TakeALot Base URL",
             "description": "TakeALot URL to access the api",
             "default": "",
             "validator":"string",
@@ -52,10 +54,21 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
         """Define custom URL endpoints for this plugin's views."""
         return [
             path("", login_required(self.interface), name="interface"),
+            path("fetch-takealot-data/", login_required(self.fetch_takealot_data), name='fetch-takealot-data')
         ]
 
     # --- End Provided Functions ---
     def interface(self, request):
+        self.context = {
+            "plugin": self,
+            "title": "TakeALOT SDC View",
+            "today": datetime.date.today().strftime("%Y-%m-%d"),
+            "warnings":[]
+        }
+
+        return render(request, "takealot_integration/get_sdc.html", self.context)
+
+    def fetch_takealot_data(self, request):
         product_list = self.takealot_api.get_stock_cover()
         sales_data = self.takealot_api.get_sales_data(days=100)
         filtered = TakeALot_API.prepare_sdc_data(product_list, sales_data)
@@ -80,6 +93,15 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
                     "sku": sku,
                     "product_name": product_name,
                     "product_image": product_image,
+                    "sdc_total": sdc_total,
+                    "sales_count": sales_count,
+                    "warehouses": warehouses
+                })
+            else:
+                result.append({
+                    "sku": sku,
+                    "product_name": "not found",
+                    "product_image": 'not found',
                     "sdc_total": sdc_total,
                     "sales_count": sales_count,
                     "warehouses": warehouses
