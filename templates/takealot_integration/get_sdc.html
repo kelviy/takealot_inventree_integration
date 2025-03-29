@@ -160,21 +160,6 @@
                     </div>`;
                     $("#tableContainer").html(tableHtml);
 
-                    $(".toggle-details").on("click", function() {
-                        const targetSelector = $(this).data("bs-target");
-                        const icon = $(this).find("i");
-                        const target = $(targetSelector);
-                        const isShown = target.hasClass("show");
-
-                        if (isShown) {
-                            target.removeClass("show");
-                            icon.removeClass("bi-dash").addClass("bi-plus");
-                        } else {
-                            target.addClass("show");
-                            icon.removeClass("bi-plus").addClass("bi-dash");
-                        }
-                    });
-
                     // Add click handlers to table headers for sorting (skip the first two columns)
                     $("#dataTable th").each(function(index) {
                         if (index === 0 || index === 1) return; // skip the expand and image column headers
@@ -189,6 +174,16 @@
 
                     // Make columns resizable
                     makeResizable(document.getElementById('dataTable'));
+
+                    // Listen for collapse events to update the toggle icon
+                    $('#dataTable').on('shown.bs.collapse', '.collapse', function () {
+                        var id = $(this).attr('id');
+                        $('[data-bs-target="#' + id + '"]').find("i").removeClass("bi-plus").addClass("bi-dash");
+                    });
+                    $('#dataTable').on('hidden.bs.collapse', '.collapse', function () {
+                        var id = $(this).attr('id');
+                        $('[data-bs-target="#' + id + '"]').find("i").removeClass("bi-dash").addClass("bi-plus");
+                    });
                 },
                 error: function(error) {
                     $("#loading").hide();
