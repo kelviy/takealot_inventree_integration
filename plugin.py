@@ -2,6 +2,8 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from plugin.mixins import NavigationMixin, SettingsMixin, UrlsMixin
+from plugin import InvenTreePlugin
 from .api import TakeALot_API, Custom_Inventree_API
 
 class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreePlugin):
