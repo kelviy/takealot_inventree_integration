@@ -141,13 +141,15 @@
                                       <td>${item.sales_count}</td>
                                   </tr>`;
                         if (hasWarehouses) {
-                            tableHtml += `<tr class="collapse" id="details-${sanitizedSku}">
+                            tableHtml += `<tr>
                                             <td colspan="6">
-                                                <ul class="list-group list-group-flush">`;
+                                                <div class="collapse" id="details-${sanitizedSku}">
+                                                    <ul class="list-group list-group-flush">`;
                             item.warehouses.forEach(w => {
                                 tableHtml += `<li class="list-group-item">${w.warehouse_name} (SDC: ${w.sdc})</li>`;
                             });
                             tableHtml += `       </ul>
+                                                </div>
                                             </td>
                                           </tr>`;
                         }
