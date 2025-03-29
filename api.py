@@ -110,12 +110,12 @@ class TakeALot_API:
             data = response.json()["offers"][0]
         except Exception as e:
             print(f"Error {e}")
-            return []
+            return
         
         mappings = {}
         for mapping in data.get("stock_at_takealot", []):
             # Expecting each mapping to be a dict with "warehouse" details.
-            mappings.update(mapping["warehouse"])
+            mappings.update({mapping["warehouse"]["warehouse_id"]:mapping["warehouse"]["name"]})
         self.warehouse_mappings = mappings
 
 
