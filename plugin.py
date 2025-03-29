@@ -63,25 +63,26 @@ class Takealot_Integration(UrlsMixin, NavigationMixin, SettingsMixin, InvenTreeP
         result = []
         for sku, sdc_total, stock_cover, sales_count in filtered:
             part = self.inventree_api.match_part(sku)
-            product_image = part.image.url if getattr(part, "image", None) else ""
-            product_name = part.name
-            # Map warehouse ids to names using the warehouse_mappings list.
-            warehouses = []
-            for wh_id in stock_cover:
-                # Look up warehouse name from the mappings list; if not found, default to the id.
-                warehouse_name = self.takealot_api.warehouse_mappings[wh_id]
-                warehouses.append({
-                    "warehouse_id": wh_id,
-                    "warehouse_name": warehouse_name,
-                    "sdc": stock_cover[wh_id]
+            if part:
+                product_image = part.image.url if getattr(part, "image", None) else ""
+                product_name = part.name
+                # Map warehouse ids to names using the warehouse_mappings list.
+                warehouses = []
+                for wh_id in stock_cover:
+                    # Look up warehouse name from the mappings list; if not found, default to the id.
+                    warehouse_name = self.takealot_api.warehouse_mappings[wh_id]
+                    warehouses.append({
+                        "warehouse_id": wh_id,
+                        "warehouse_name": warehouse_name,
+                        "sdc": stock_cover[wh_id]
+                    })
+                result.append({
+                    "sku": sku,
+                    "product_name": product_name,
+                    "product_image": product_image,
+                    "sdc_total": sdc_total,
+                    "sales_count": sales_count,
+                    "warehouses": warehouses
                 })
-            result.append({
-                "sku": sku,
-                "product_name": product_name,
-                "product_image": product_image,
-                "sdc_total": sdc_total,
-                "sales_count": sales_count,
-                "warehouses": warehouses
-            })
 
         return JsonResponse({"data": result})
