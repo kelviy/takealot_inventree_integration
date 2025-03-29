@@ -23,6 +23,10 @@
 <!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <script>
+    function sanitizeId(value) {
+        return value.replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
     // Simple sort function for table rows (using text comparison)
     function sortTable(table, column, asc = true) {
         const tbody = table.tBodies[0];
@@ -38,7 +42,7 @@
             .forEach(tr => {
                 tbody.appendChild(tr);
                 // Append the details row immediately following the main row if it exists
-                let detailsRow = document.getElementById("details-" + $(tr).data("sku"));
+                let detailsRow = document.getElementById("details-" + sanitizeId($(tr).data("sku")));
                 if (detailsRow) {
                     tbody.appendChild(detailsRow);
                 }
@@ -93,6 +97,7 @@
                 success: function(response) {
                     $("#loading").hide();
                     const data = response.data;
+                    const sanitizeId = value => value.replace(/[^a-zA-Z0-9_-]/g, "_");
                     let tableHtml = `
                     <div class="card">
                         <div class="card-body">
@@ -111,11 +116,12 @@
                                     <tbody>
                     `;
                     data.forEach(item => {
+                        const sanitizedSku = sanitizeId(item.sku);
                         const hasWarehouses = item.warehouses && item.warehouses.length > 0;
-                        tableHtml += `<tr class="main-row" data-sku="${item.sku}">`
+                        tableHtml += `<tr class="main-row" data-sku="${sanitizedSku}">`
                                     + `<td class="text-center">`;
                         if (hasWarehouses) {
-                            tableHtml += `<button class="btn btn-sm btn-outline-secondary toggle-details" data-bs-toggle="collapse" data-bs-target="#details-${item.sku}" aria-expanded="false" aria-controls="details-${item.sku}">
+                            tableHtml += `<button class="btn btn-sm btn-outline-secondary toggle-details" data-bs-toggle="collapse" data-bs-target="#details-${sanitizedSku}" aria-expanded="false" aria-controls="details-${sanitizedSku}">
                                             <i class="bi bi-plus"></i>
                                           </button>`;
                         }
@@ -129,13 +135,13 @@
                         }
                         tableHtml += `</td>`;
                         
-                        tableHtml += `<td>${item.sku}</td>
+                        tableHtml += `<td>${sanitizedSku}</td>
                                       <td>${item.product_name}</td>
                                       <td>${item.sdc_total}</td>
                                       <td>${item.sales_count}</td>
                                   </tr>`;
                         if (hasWarehouses) {
-                            tableHtml += `<tr class="collapse" id="details-${item.sku}">
+                            tableHtml += `<tr class="collapse" id="details-${sanitizedSku}">
                                             <td colspan="6">
                                                 <ul class="list-group list-group-flush">`;
                             item.warehouses.forEach(w => {
