@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
   container.innerHTML = '<div id="loader">Loading...</div>';
 
   // Fetch the data from the endpoint
-  fetch('/plugins/takealot/data/')
+  fetch('/plugins/takealot/fetch-takealot-data/')
     .then(function(response) {
       return response.json();
     })
