@@ -94,6 +94,4 @@ function TakealotPlugin() {
   );
 }
 
-export default TakealotPlugin;
-
 window.TakealotPlugin = TakealotPlugin;
