@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   // The container element where the table will be inserted
-  var container = document.getElementById('takealot-plugin-container');
+  var container = document.getElementById('takealot-data-container');
   if (!container) {
-    console.error('Container with id "takealot-plugin-container" not found');
+    console.error('Container with id "takealot-data-container" not found');
     return;
   }
 
